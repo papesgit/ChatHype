@@ -17,10 +17,15 @@
 
 1. **Enter Twitch VOD URL** to download chat logs and videos.
 2. **Adjust settings** (time intervals, emote tracking, etc.) to customize highlight detection.
-3. **View chat activity graphs** and **export highlights** as CSV for later reference.
+3. Directly open the Twitch VOD at highlights or at the selected timestamp ushing SHIFT+Left-Click
+4. **View chat activity graphs** and **export highlights** as CSV for later reference.
 
 ## Credits
 
 https://github.com/lay295/TwitchDownloader TwitchDownloaderCLI.exe for chatlog downloading
 
 https://github.com/ihabunek/twitch-dl twitch-dl.pyz for vod downloads
+
+## License
+
+This project is licensed under the MIT License.
