@@ -6,6 +6,7 @@
 
 - **Download VODs and Chat Logs** from Twitch using `twitch-dl.pyz` and `TwitchDownloaderCLI`.
 - **Visualize Chat Activity** with adjustable time intervals and thresholds.
+- **Track Custom Emotes** for increased hype accuracy (different chats might use different emotes when excited).
 - **Highlight Peaks and Valleys** in chat activity to identify exciting moments.
 - **Export Highlights** to CSV for easy reference and sharing.
 
