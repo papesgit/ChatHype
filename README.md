@@ -26,7 +26,6 @@
 3. Directly open the Twitch VOD at highlights or at the selected timestamp ushing SHIFT+Left-Click
 4. **View chat activity graphs** and **export highlights** as CSV for later reference.
 
-Credits
 
 ## Credits
 
