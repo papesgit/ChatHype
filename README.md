@@ -21,12 +21,17 @@
 3. Directly open the Twitch VOD at highlights or at the selected timestamp ushing SHIFT+Left-Click
 4. **View chat activity graphs** and **export highlights** as CSV for later reference.
 
+Credits
+
 ## Credits
 
-https://github.com/lay295/TwitchDownloader TwitchDownloaderCLI.exe for chatlog downloading
+This project uses the following third-party tools:
 
-https://github.com/ihabunek/twitch-dl twitch-dl.pyz for vod downloads
+- [**twitch-dl**](https://github.com/ihabunek/twitch-dl) - MIT License. Used for downloading VODs from Twitch.
+- [**TwitchDownloaderCLI**](https://github.com/lay295/TwitchDownloader) - GPLv3 License. Used for downloading chat logs from Twitch.
+
+Copies of these licenses are included in the repository.
 
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the GPLv3: http://www.gnu.org/licenses/gpl-3.0.html
