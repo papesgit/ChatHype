@@ -1765,17 +1765,17 @@ class TwitchHighlighterApp(QMainWindow):
         """
         Handles changes to the time interval resolution and updates the current plot.
         """
-        if self.chat_files:
-            current_chat_file = self.chat_files[self.current_chat_index] if self.current_chat_index < len(self.chat_files) else self.chat_files[0]
-            new_interval = self.resolution_spinbox.value()
-            
-            # Reprocess chat data with the updated time interval
-            self.reprocess_chat_data(current_chat_file, new_interval)
-        else:
+        # Check if there is a chat log currently loaded
+        if not self.chat_file_path:
             QMessageBox.warning(
                 self, "No Chat Log",
                 "Please download or select a chat log before changing the resolution."
             )
+            return  # Exit the function early if no chat log is loaded
+
+        # If a chat log is available, proceed with reprocessing the data
+        new_interval = self.resolution_spinbox.value()
+        self.reprocess_chat_data(self.chat_file_path, new_interval)
 
     def reprocess_chat_data(self, chat_file_path, time_interval):
         """
