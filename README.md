@@ -2,6 +2,11 @@
 
 **ChatHype** is a desktop application that downloads, processes, and visualizes chat logs for Twitch VODs. It identifies key moments based on chat activity, helping streamers and viewers easily find highlights in recorded streams.
 
+<div align="center">
+  <img src="https://i.imgur.com/c2rRfo8.png" alt="ChatHype Main Window" width="45%" style="margin-right: 10px;"/>
+  <img src="https://i.imgur.com/8MaEJ3H.png" alt="ChatHype Graph View" width="45%"/>
+</div>
+
 ## Features
 
 - **Download VODs and Chat Logs** from Twitch using `twitch-dl.pyz` and `TwitchDownloaderCLI`.
