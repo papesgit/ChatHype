@@ -47,17 +47,31 @@ def is_twitch_dl_available():
 
 # Function to check if Python is available
 def is_python_available():
-    # Skip Python check if running as a bundled application
+    # If running as a bundled application, check for an external Python interpreter
     if getattr(sys, 'frozen', False):
-        return True  # Assume Python is available when bundled
+        # Attempt to find 'python' in the system PATH
+        python_executable = shutil.which('python') or shutil.which('python3')
+        return python_executable is not None
+    else:
+        # If not frozen, check if the current Python executable is available
+        try:
+            subprocess.run([sys.executable, '--version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            return True
+        except Exception:
+            return False
 
-    # Otherwise, check for Python as originally intended
-    try:
-        subprocess.run([sys.executable, '--version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        return True
-    except Exception:
-        return False
-
+# Function to get the system's Python executable
+def get_python_executable():
+    if getattr(sys, 'frozen', False):
+        # Look for 'python' or 'python3' in the system PATH
+        python_exe = shutil.which('python') or shutil.which('python3')
+        if python_exe:
+            return python_exe
+        else:
+            return None
+    else:
+        # If not frozen, use the current Python executable
+        return sys.executable
 
 if not is_python_available() or not is_twitch_dl_available():
     # Initialize a temporary QApplication to show the QMessageBox before exiting
@@ -68,7 +82,7 @@ if not is_python_available() or not is_twitch_dl_available():
     QMessageBox.critical(
         None, "Error",
         f"twitch-dl.pyz not found or Python is not available.\n"
-        f"Please ensure twitch-dl.pyz is in {BASE_DIR} and Python is installed."
+        f"Please ensure twitch-dl.pyz is in {BASE_DIR} and Python is installed and added to the system PATH."
     )
     sys.exit(1)
 
@@ -93,9 +107,6 @@ def select_existing_chatlog(self):
             self, "No Files Selected",
             "No chat log files were selected. Please select at least one file to proceed."
         )
-
-    
-
 
 class DownloadChatThread(QThread):
     """
@@ -160,7 +171,6 @@ class DownloadChatThread(QThread):
             self.error_signal.emit(str(e))
             self.log_signal.emit(f"Exception occurred during chat log download: {e}")
 
-
 # Path to the cache directory in the root folder of the app
 cache_dir = os.path.join(BASE_DIR, 'vod_cache')
 
@@ -169,7 +179,7 @@ os.makedirs(cache_dir, exist_ok=True)
 
 class DownloadVODThread(QThread):
     """
-    Thread to download the VOD video using twitch-dl.
+    Thread to download the VOD video using twitch-dl.pyz.
     """
     progress_signal = pyqtSignal(int)
     finished_signal = pyqtSignal(str)
@@ -187,29 +197,35 @@ class DownloadVODThread(QThread):
         self.rate_limit = rate_limit  # New parameter for rate limit
 
     def run(self):
+        python_exe = get_python_executable()
+        if not python_exe:
+            self.error_signal.emit("Python interpreter not found. Please install Python and ensure it's in the system PATH.")
+            self.log_signal.emit("Python interpreter not found.")
+            return
+
+        command = [
+            python_exe, '-X', 'utf8',  # Enforce UTF-8
+            twitch_dl_pyz,
+            'download', '-q', self.quality,
+            self.vod_id,
+            '--cache-dir', cache_dir,
+            '--no-join'
+        ]
+
+        if self.chapter:
+            command.extend(['-c', self.chapter])
+        if self.start_time:
+            command.extend(['-s', self.start_time])
+        if self.end_time:
+            command.extend(['-e', self.end_time])
+
+        # Add rate limit to command if specified
+        if self.rate_limit:
+            command.extend(['-r', self.rate_limit])
+
+        self.log_signal.emit(f"Executing command: {' '.join(command)}")
+
         try:
-            command = [
-                sys.executable, '-X', 'utf8',  # Enforce UTF-8
-                twitch_dl_pyz,
-                'download', '-q', self.quality,
-                self.vod_id,
-                '--cache-dir', cache_dir,
-                '--no-join'
-            ]
-
-            if self.chapter:
-                command.extend(['-c', self.chapter])
-            if self.start_time:
-                command.extend(['-s', self.start_time])
-            if self.end_time:
-                command.extend(['-e', self.end_time])
-
-            # Add rate limit to command if specified
-            if self.rate_limit:
-                command.extend(['-r', self.rate_limit])
-
-            self.log_signal.emit(f"Executing command: {' '.join(command)}")
-
             env = os.environ.copy()
             env['PYTHONIOENCODING'] = 'utf-8'
             env['LC_ALL'] = 'en_US.UTF-8'
@@ -253,8 +269,6 @@ class DownloadVODThread(QThread):
         except Exception as e:
             self.error_signal.emit(str(e))
             self.log_signal.emit(f"Exception occurred during VOD download: {e}")
-
-
 
 # Removed DownloadFFmpegThread since twitch-dl does not handle FFmpeg downloads
 
@@ -611,7 +625,7 @@ class TwitchHighlighterApp(QMainWindow):
 
     def download_chat_log(self):
         """
-        Initiates the download of the chat log using twitch-dl.
+        Initiates the download of the chat log using twitch-dl.pyz.
         """
         vod_url = self.vod_input.text().strip()
         if not vod_url:
@@ -648,7 +662,7 @@ class TwitchHighlighterApp(QMainWindow):
 
     def download_vod(self):
         """
-        Initiates the download of the VOD video using twitch-dl.
+        Initiates the download of the VOD video using twitch-dl.pyz.
         """
         vod_url = self.vod_input.text().strip()
         if not vod_url:
@@ -812,6 +826,7 @@ class TwitchHighlighterApp(QMainWindow):
             self, "Download Error",
             f"Failed to download:\n{error_message}\nPlease ensure the VOD URL is correct and twitch-dl is functioning properly."
         )
+
     def initialize_chart_window(self, chat_file_path):
         """
         Creates a new chart window for a specific chat log.
@@ -926,8 +941,6 @@ class TwitchHighlighterApp(QMainWindow):
         # Display success message for each file processed
         QMessageBox.information(self, "Processing Completed", f"Chat log {os.path.basename(chat_file_path)} processed successfully.")
 
-
-
     def apply_initial_smoothing(self):
         """
         Applies initial smoothing to chat_rate, pogs_rate, and average_rate based on the default smoothing window.
@@ -1029,7 +1042,6 @@ class TwitchHighlighterApp(QMainWindow):
         
         self.process_threads[chat_file_path] = process_thread  # Store the thread for later reference
         process_thread.start()
-
 
     def create_controls(self, chart_layout):
         """
@@ -1826,7 +1838,7 @@ class TwitchHighlighterApp(QMainWindow):
         """
         if hasattr(self, 'process_thread') and self.process_thread.isRunning():
             self.process_thread.terminate()  # Terminate the thread safely
-            self.process_thread.wait()       # Wait for the thread to finish before closing
+            self.process_thread.wait()
         super().closeEvent(event)
 
 
